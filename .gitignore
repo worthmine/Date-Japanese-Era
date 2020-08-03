@@ -4,3 +4,11 @@ inc/
 pm_to_blib
 *~
 Date-Japanese-Era-*
+/Date-Japanese-Era-*
+/.build
+/_build_params
+/Build
+/Build.bat
+!Build/
+!META.json
+!LICENSE
