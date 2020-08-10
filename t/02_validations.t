@@ -17,7 +17,8 @@ my @valid = (
 );
 
 for my $test (@valid) {
-    is( Date::Japanese::Era->is_valid(@$test), 1, 'valid' );
+    my $e = Date::Japanese::Era->new(@$test);
+    is $e->is_valid(), 1, 'valid';
 }
 
 my @invalid = (
@@ -32,7 +33,8 @@ my @invalid = (
 );
 
 for my $test (@invalid) {
-    is( Date::Japanese::Era->is_valid(@$test), undef, 'invalid' );
+    my $e = Date::Japanese::Era->new(@$test);
+    is $e->is_valid(), undef, 'invalid';
 }
 
 done_testing;

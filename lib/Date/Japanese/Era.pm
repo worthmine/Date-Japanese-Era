@@ -26,9 +26,16 @@ sub new {
         name           => undef,
         year           => undef,
         gregorian_year => undef,
-    }, $class;
+        month          => undef,
+        mday           => undef,
+        },
+        ref($class) || $class;
 
-    if ( @args == 3 ) {
+    if ( @args == 4 ) {
+        $self->_from_era(@args);
+        $self->{'month'} = $args[2];
+        $self->{'mday'}  = $args[3];
+    } elsif ( @args == 3 ) {
         $self->_from_ymd(@args);
     } elsif ( @args == 2 ) {
         $self->_from_era(@args);
@@ -115,18 +122,12 @@ sub _dwim {
 
 sub is_valid {
     my $self = shift;
-    my ( $name, $year, $month, $mday ) = @_;
-    my $class = ref $self ? ref $self : $self;
-
-    my $ok = eval {
-        my $era1 = $class->new( $name, $year );
-        my $era2 = $class->new( $era1->gregorian_year, $month, $mday );
-
-        return $era1->name eq $era2->name;
+    my $ok   = eval {
+        my $era2 = $self->new( $self->gregorian_year, $self->{'month'}, $self->{'mday'} );
+        return $self->name eq $era2->name;
     };
 
-    return $ok if $ok;
-    return;
+    return $ok || undef;
 }
 
 sub _number {
@@ -210,6 +211,11 @@ Date::Japanese::Era - Conversion between Japanese Era / Gregorian calendar
   # more DWIMmy
   $era = Date::Japanese::Era->new("昭和五十二年");
   $era = Date::Japanese::Era->new("昭和52年");
+
+  # validations
+  say Date::Japanese::Era->new("平成", 31, 4, 30)->is_valid() ? "valid" : "invalid"; # valid
+  say Date::Japanese::Era->new("平成", 31, 5,  1)->is_valid() ? "valid" : "invalid"; # invalid
+  say Date::Japanese::Era->new("平成", 32, 5,  1)->is_valid() ? "valid" : "invalid"; # invalid
 
 =head1 DESCRIPTION
 
