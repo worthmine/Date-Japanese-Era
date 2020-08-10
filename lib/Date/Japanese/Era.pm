@@ -113,6 +113,22 @@ sub _dwim {
     $self->_from_era( $era, $year );
 }
 
+sub is_valid {
+    my $self = shift;
+    my ( $name, $year, $month, $mday ) = @_;
+    my $class = ref $self ? ref $self : $self;
+
+    my $ok = eval {
+        my $era1 = $class->new( $name, $year );
+        my $era2 = $class->new( $era1->gregorian_year, $month, $mday );
+
+        return $era1->name eq $era2->name;
+    };
+
+    return $ok if $ok;
+    return;
+}
+
 sub _number {
     my $str = shift;
 
