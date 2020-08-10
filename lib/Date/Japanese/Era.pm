@@ -6,39 +6,35 @@ our $VERSION = '0.07';
 use Carp;
 use constant END_OF_LUNAR => 1872;
 
-our(%ERA_TABLE, %ERA_JA2ASCII, %ERA_ASCII2JA);
+our ( %ERA_TABLE, %ERA_JA2ASCII, %ERA_ASCII2JA );
 
 sub import {
     my $self = shift;
     if (@_) {
-	my $table = shift;
-	eval qq{use Date::Japanese::Era::Table::$table};
-	die $@ if $@;
-    }
-    else {
-	require Date::Japanese::Era::Table;
-	import Date::Japanese::Era::Table;
+        my $table = shift;
+        eval qq{use Date::Japanese::Era::Table::$table};
+        die $@ if $@;
+    } else {
+        require Date::Japanese::Era::Table;
+        import Date::Japanese::Era::Table;
     }
 }
 
 sub new {
-    my($class, @args) = @_;
+    my ( $class, @args ) = @_;
     my $self = bless {
-	name => undef,
-	year => undef,
-	gregorian_year => undef,
+        name           => undef,
+        year           => undef,
+        gregorian_year => undef,
     }, $class;
 
-    if (@args == 3) {
-	$self->_from_ymd(@args);
-    }
-    elsif (@args == 2) {
-	$self->_from_era(@args);
-    }
-    elsif (@args == 1) {
-	$self->_dwim(@args);
-    }
-    else {
+    if ( @args == 3 ) {
+        $self->_from_ymd(@args);
+    } elsif ( @args == 2 ) {
+        $self->_from_era(@args);
+    } elsif ( @args == 1 ) {
+        $self->_dwim(@args);
+    } else {
         croak "odd number of arguments: ", scalar(@args);
     }
 
@@ -46,36 +42,37 @@ sub new {
 }
 
 sub _from_ymd {
-    my($self, @ymd) = @_;
+    my ( $self, @ymd ) = @_;
 
-    if ($ymd[0] <= END_OF_LUNAR) {
-	Carp::carp("In $ymd[0] they didn't use gregorious date.");
+    if ( $ymd[0] <= END_OF_LUNAR ) {
+        Carp::carp("In $ymd[0] they didn't use gregorious date.");
     }
 
     require Date::Calc;
 
     # XXX can be more efficient
-    for my $era (keys %ERA_TABLE) {
-	my $data = $ERA_TABLE{$era};
-	if (Date::Calc::Delta_Days(@{$data}[1..3], @ymd) >= 0 &&
-            Date::Calc::Delta_Days(@ymd, @{$data}[4..6]) >= 0) {
-	    $self->{name} = $era;
-	    $self->{year} = $ymd[0] - $data->[1] + 1;
-	    $self->{gregorian_year} = $ymd[0];
-	    return;
-	}
+    for my $era ( keys %ERA_TABLE ) {
+        my $data = $ERA_TABLE{$era};
+        if (   Date::Calc::Delta_Days( @{$data}[ 1 .. 3 ], @ymd ) >= 0
+            && Date::Calc::Delta_Days( @ymd, @{$data}[ 4 .. 6 ] ) >= 0 )
+        {
+            $self->{name}           = $era;
+            $self->{year}           = $ymd[0] - $data->[1] + 1;
+            $self->{gregorian_year} = $ymd[0];
+            return;
+        }
     }
 
-    croak "Unsupported date: ", join('-', @ymd);
+    croak "Unsupported date: ", join( '-', @ymd );
 }
 
 sub _from_era {
-    my($self, $era, $year) = @_;
-    if ($era =~ /^[a-zA-Z]+$/) {
-	$era = $self->_ascii2ja($era);
+    my ( $self, $era, $year ) = @_;
+    if ( $era =~ /^[a-zA-Z]+$/ ) {
+        $era = $self->_ascii2ja($era);
     }
 
-    unless (utf8::is_utf8($era)) {
+    unless ( utf8::is_utf8($era) ) {
         croak "Era needs to be Unicode string";
     }
 
@@ -83,19 +80,19 @@ sub _from_era {
         or croak "Unknown era name: $era";
 
     my $g_year = $data->[1] + $year - 1;
-    if ($g_year > $data->[4]) {
-	croak "Invalid combination of era and year: $era-$year";
+    if ( $g_year > $data->[4] ) {
+        croak "Invalid combination of era and year: $era-$year";
     }
 
-    $self->{name} = $era;
-    $self->{year} = $year;
+    $self->{name}           = $era;
+    $self->{year}           = $year;
     $self->{gregorian_year} = $g_year;
 }
 
 sub _dwim {
-    my($self, $str) = @_;
+    my ( $self, $str ) = @_;
 
-    unless (utf8::is_utf8($str)) {
+    unless ( utf8::is_utf8($str) ) {
         croak "Era should be in Unicode";
     }
 
@@ -106,14 +103,14 @@ sub _dwim {
 
     my $era = $1;
 
-    $str =~ s/\x{5E74}$//; # nen
+    $str =~ s/\x{5E74}$//;    # nen
     my $year = _number($str);
 
-    unless (defined $year) {
+    unless ( defined $year ) {
         croak "Can't parse year from $str";
     }
 
-    $self->_from_era($era, $year);
+    $self->_from_era( $era, $year );
 }
 
 sub _number {
@@ -121,7 +118,7 @@ sub _number {
 
     $str =~ s/([\x{FF10}-\x{FF19}])/;ord($1)-0xff10/eg;
 
-    if ($str =~ /^\d+$/) {
+    if ( $str =~ /^\d+$/ ) {
         return $str;
     } else {
         eval { require Lingua::JA::Numbers };
@@ -134,12 +131,12 @@ sub _number {
 }
 
 sub _ascii2ja {
-    my($self, $ascii) = @_;
+    my ( $self, $ascii ) = @_;
     return $ERA_ASCII2JA{$ascii} || croak "Unknown era name: $ascii";
 }
 
 sub _ja2ascii {
-    my($self, $ja) = @_;
+    my ( $self, $ja ) = @_;
     return $ERA_JA2ASCII{$ja} || croak "Unknown era name: $ja";
 }
 
@@ -152,7 +149,7 @@ sub name {
 
 sub name_ascii {
     my $self = shift;
-    return $self->_ja2ascii($self->name);
+    return $self->_ja2ascii( $self->name );
 }
 
 sub year {
