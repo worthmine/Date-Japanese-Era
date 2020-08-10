@@ -26,6 +26,12 @@ Date::Japanese::Era - Conversion between Japanese Era / Gregorian calendar
     $era = Date::Japanese::Era->new("昭和五十二年");
     $era = Date::Japanese::Era->new("昭和52年");
 
+    # with validation
+    $era = Date::Japanese::Era->is_valid("平成", 31, 4, 30)? "valid" : "invalid"; # valid
+    say ref $era; # Date::Japanese::Era
+    $era = Date::Japanese::Era->is_valid("平成", 31, 5,  1)? "valid" : "invalid"; # invalid
+    say ref $era; # ''
+
 # DESCRIPTION
 
 Date::Japanese::Era handles conversion between Japanese Era and
@@ -52,6 +58,13 @@ Gregorian calendar.
 
     Exceptions are thrown when inputs are invalid, such as non-existent
     era name and year combination, unknwon era-name, etc.
+
+- is\_valid
+
+        $era = Date::Japanese::Era->is_valid("平成", 31, 4, 30)? "valid" : "invalid"; # valid
+
+    Constructs new Date::Japanese::Era instance if the arguments were valid.
+    returns `undef` if fails to parse.
 
 - name
 
@@ -102,7 +115,7 @@ module does not support lunar calendar, but gives warnings in such
 cases ("In %d they didn't use gregorius calendar").
 
     To use calendar ealier than that, see
-    [DateTime::Calendar::Japanese::Era](https://metacpan.org/pod/DateTime::Calendar::Japanese::Era), which is based on DateTime
+    [DateTime::Calendar::Japanese::Era](https://metacpan.org/pod/DateTime%3A%3ACalendar%3A%3AJapanese%3A%3AEra), which is based on DateTime
     framework and is more comprehensive.
 
 - There should be discussion how we handle the exact day the era has
@@ -135,4 +148,4 @@ modify it under the same terms as Perl itself.
 
 # SEE ALSO
 
-[DateTime::Calendar::Japanese::Era](https://metacpan.org/pod/DateTime::Calendar::Japanese::Era), [Date::Calc](https://metacpan.org/pod/Date::Calc), [Encode](https://metacpan.org/pod/Encode)
+[DateTime::Calendar::Japanese::Era](https://metacpan.org/pod/DateTime%3A%3ACalendar%3A%3AJapanese%3A%3AEra), [Date::Calc](https://metacpan.org/pod/Date%3A%3ACalc), [Encode](https://metacpan.org/pod/Encode)
