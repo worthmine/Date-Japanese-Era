@@ -26,16 +26,9 @@ sub new {
         name           => undef,
         year           => undef,
         gregorian_year => undef,
-        month          => undef,
-        mday           => undef,
-        },
-        ref($class) || $class;
+    }, $class;
 
-    if ( @args == 4 ) {
-        $self->_from_era(@args);
-        $self->{'month'} = $args[2];
-        $self->{'mday'}  = $args[3];
-    } elsif ( @args == 3 ) {
+    if ( @args == 3 ) {
         $self->_from_ymd(@args);
     } elsif ( @args == 2 ) {
         $self->_from_era(@args);
@@ -46,6 +39,19 @@ sub new {
     }
 
     return $self;
+}
+
+sub is_valid {    # yet another constructor with validation
+    my $class = shift;
+    my ( $name, $year, $month, $day ) = @_;
+    my $self = eval {
+        my $era1 = Date::Japanese::Era->new( $name, $year );
+        my $era2 = Date::Japanese::Era->new( $era1->gregorian_year, $month, $day );
+
+        return $era2 if $era1->name eq $era2->name;
+    };
+
+    return $self || undef;
 }
 
 sub _from_ymd {
@@ -118,16 +124,6 @@ sub _dwim {
     }
 
     $self->_from_era( $era, $year );
-}
-
-sub is_valid {
-    my $self = shift;
-    my $ok   = eval {
-        my $era2 = $self->new( $self->gregorian_year, $self->{'month'}, $self->{'mday'} );
-        return $self->name eq $era2->name;
-    };
-
-    return $ok || undef;
 }
 
 sub _number {
@@ -212,10 +208,11 @@ Date::Japanese::Era - Conversion between Japanese Era / Gregorian calendar
   $era = Date::Japanese::Era->new("昭和五十二年");
   $era = Date::Japanese::Era->new("昭和52年");
 
-  # validations
-  say Date::Japanese::Era->new("平成", 31, 4, 30)->is_valid() ? "valid" : "invalid"; # valid
-  say Date::Japanese::Era->new("平成", 31, 5,  1)->is_valid() ? "valid" : "invalid"; # invalid
-  say Date::Japanese::Era->new("平成", 32, 5,  1)->is_valid() ? "valid" : "invalid"; # invalid
+  # with validation
+  $era = Date::Japanese::Era->is_valid("平成", 31, 4, 30)? "valid" : "invalid"; # valid
+  say ref $era; # Date::Japanese::Era
+  $era = Date::Japanese::Era->is_valid("平成", 31, 5,  1)? "valid" : "invalid"; # invalid
+  say ref $era; # ''
 
 =head1 DESCRIPTION
 
@@ -245,6 +242,14 @@ the L<utf8> pragma if you want to write them in literals.
 
 Exceptions are thrown when inputs are invalid, such as non-existent
 era name and year combination, unknwon era-name, etc.
+
+=item is_valid
+
+  $era = Date::Japanese::Era->is_valid("平成", 31, 4, 30)? "valid" : "invalid"; # valid
+
+Constructs new Date::Japanese::Era instance if the arguments were valid.
+returns C<undef> if fails to parse.
+
 
 =item name
 
